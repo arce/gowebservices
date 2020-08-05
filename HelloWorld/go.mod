@@ -1,3 +1,3 @@
-module github.com/arce/gowebservices/HelloWorld
+module github.com/arce/gowebservices/WebServiceREST
 
 go 1.12
