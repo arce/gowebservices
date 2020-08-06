@@ -7,7 +7,7 @@ import (
 
 func handler(writer http.ResponseWriter, request *http.Request) {
 	var err error
-	readData("data.csv")
+	readData("books.csv")
 	switch request.Method {
 	case "GET":
 		err = handleGet(writer, request)
@@ -18,7 +18,7 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 	case "DELETE":
 		err = handleDelete(writer, request)
 	}
-	writeData("data.csv")
+	writeData("books.csv")
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
@@ -26,6 +26,6 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/record/", handler)
+	http.HandleFunc("/book/", handler)
 	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }

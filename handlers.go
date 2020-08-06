@@ -2,14 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"path"
+	"strconv"
+	"time"
 )
 
 func find(x string) int {
-	for k, v := range records {
-		if x == v[0] {
-			return k
+	for i, book := range books {
+		if x == book.Id {
+			return i
 		}
 	}
 	return -1
@@ -22,24 +25,26 @@ func handleGet(w http.ResponseWriter, r *http.Request) (err error) {
 	if i == -1 {
 		return
 	}
-	dataJson, err := json.Marshal(records[i])
+	dataJson, err := json.Marshal(books[i])
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(dataJson)
 	return
 }
 
-func handlePost(w http.ResponseWriter, r *http.Request) (err error) {
+func handlePut(w http.ResponseWriter, r *http.Request) (err error) {
 	len := r.ContentLength
 	body := make([]byte, len)
 	r.Body.Read(body)
-	var data []string
-	json.Unmarshal(body, &data)
-	records = append(records, data)
+	book := Book{}
+	json.Unmarshal(body, &book)
+	rand.Seed(time.Now().UTC().UnixNano())
+	book.Id = strconv.Itoa(rand.Intn(1000000))
+	books = append(books, book)
 	w.WriteHeader(200)
 	return
 }
 
-func handlePut(w http.ResponseWriter, r *http.Request) (err error) {
+func handlePost(w http.ResponseWriter, r *http.Request) (err error) {
 	w.WriteHeader(200)
 	return
 }
