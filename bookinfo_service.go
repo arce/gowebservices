@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	pb "github.com/arce/gowebservices/booksapp"
-	"github.com/gofrs/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -13,12 +12,6 @@ type server struct {
 }
 
 func (s *server) AddBook(ctx context.Context, in *pb.Book) (*pb.BookID, error) {
-	out, err := uuid.NewV4()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal,
-			"Error while generating Book ID", err)
-	}
-	in.Id = out.String()
 	if s.bookMap == nil {
 		s.bookMap = make(map[string]*pb.Book)
 	}
