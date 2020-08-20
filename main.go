@@ -9,7 +9,7 @@
 package main
 
 import (
-	sw "github.com/arce/gowebservices"
+	sw "github.com/arce/gowebservices/go"
 	"log"
 	"net/http"
 	"os"
