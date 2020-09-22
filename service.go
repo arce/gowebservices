@@ -1,31 +1,97 @@
 package main
 
 import (
-	"errors"
-	"strings"
+	"context"
+	"github.com/go-kit/kit/log"
 )
 
-// StringService provides operations on strings.
-type StringService interface {
-	Uppercase(string) (string, error)
-	Count(string) int
+type Book struct {
+	BookId    string `json:"bookId,omitempty"`
+	Title     string `json:"title,omitempty"`
+	Edition   string `json:"edition,omitempty"`
+	Copyright string `json:"copyright,omitempty"`
+	Language  string `json:"language,omitempty"`
+	Pages     string `json:"pages,omitempty"`
+	Author    string `json:"author,omitempty"`
+	Publisher string `json:"publisher,omitempty"`
 }
 
-type stringService struct{}
+// service implements the ACcount Service
+type bookservice struct {
+	logger log.Logger
+}
 
-func (stringService) Uppercase(s string) (string, error) {
-	if s == "" {
-		return "", ErrEmpty
+// Service describes the Book service.
+type BookService interface {
+	CreateBook(ctx context.Context, book Book) (string, error)
+	GetBookById(ctx context.Context, id string) (interface{}, error)
+	UpdateBook(ctx context.Context, book Book) (string, error)
+	DeleteBook(ctx context.Context, id string) (string, error)
+}
+
+var books = []Book{
+	Book{BookId: "Book1", Title: "Operating System Concepts", Edition: "9th",
+		Copyright: "2012", Language: "ENGLISH", Pages: "976",
+		Author: "Abraham Silberschatz", Publisher: "John Wiley & Sons"},
+	Book{BookId: "Book3", Title: "Computer Networks", Edition: "5th",
+		Copyright: "2010", Language: "ENGLISH", Pages: "960",
+		Author: "Andrew S. Tanenbaum", Publisher: "Andrew S. Tanenbaum"},
+}
+
+func find(x string) int {
+	for i, book := range books {
+		if x == book.BookId {
+			return i
+		}
 	}
-	return strings.ToUpper(s), nil
+	return -1
 }
 
-func (stringService) Count(s string) int {
-	return len(s)
+// NewService creates and returns a new Book service instance
+func NewService(logger log.Logger) BookService {
+	return &bookservice{
+		logger: logger,
+	}
 }
 
-// ErrEmpty is returned when an input string is empty.
-var ErrEmpty = errors.New("empty string")
+// Create makes an book
+func (s bookservice) CreateBook(ctx context.Context, book Book) (string, error) {
+	var msg = "success"
+	books = append(books, book)
+	return msg, nil
+}
 
-// ServiceMiddleware is a chainable behavior modifier for StringService.
-type ServiceMiddleware func(StringService) StringService
+func (s bookservice) GetBookById(ctx context.Context, id string) (interface{}, error) {
+	var err error
+	var book interface{}
+	var empty interface{}
+	i := find(id)
+	if i == -1 {
+		return empty, err
+	}
+	book = books[i]
+	return book, nil
+}
+func (s bookservice) DeleteBook(ctx context.Context, id string) (string, error) {
+	var err error
+	msg := ""
+	i := find(id)
+	if i == -1 {
+		return "", err
+	}
+	copy(books[i:], books[i+1:])
+	books[len(books)-1] = Book{}
+	books = books[:len(books)-1]
+	return msg, nil
+}
+func (s bookservice) UpdateBook(ctx context.Context, book Book) (string, error) {
+	var empty = ""
+	var err error
+	var msg = "success"
+	i := find(book.BookId)
+	if i == -1 {
+		return empty, err
+	}
+	books[i] = book
+	return msg, nil
+}

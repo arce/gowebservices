@@ -1,70 +1,51 @@
 package main
 
 import (
-	"context"
-	"flag"
+	"github.com/go-kit/kit/log"
+	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/gorilla/mux"
 	"net/http"
 	"os"
-
-	stdprometheus "github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-	"github.com/go-kit/kit/log"
-	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-	httptransport "github.com/go-kit/kit/transport/http"
 )
 
 func main() {
-	var (
-		listen = flag.String("listen", ":"+os.Getenv("PORT"), "HTTP listen address")
-		proxy  = flag.String("proxy", "", "Optional comma-separated list of URLs to proxy uppercase requests")
-	)
-	flag.Parse()
+	logger := log.NewLogfmtLogger(os.Stderr)
 
-	var logger log.Logger
-	logger = log.NewLogfmtLogger(os.Stderr)
-	logger = log.With(logger, "listen", *listen, "caller", log.DefaultCaller)
+	r := mux.NewRouter()
 
-	fieldKeys := []string{"method", "error"}
-	requestCount := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-		Namespace: "my_group",
-		Subsystem: "string_service",
-		Name:      "request_count",
-		Help:      "Number of requests received.",
-	}, fieldKeys)
-	requestLatency := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-		Namespace: "my_group",
-		Subsystem: "string_service",
-		Name:      "request_latency_microseconds",
-		Help:      "Total duration of requests in microseconds.",
-	}, fieldKeys)
-	countResult := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-		Namespace: "my_group",
-		Subsystem: "string_service",
-		Name:      "count_result",
-		Help:      "The result of each count method.",
-	}, []string{})
+	var svc BookService
+	svc = NewService(logger)
 
-	var svc StringService
-	svc = stringService{}
-	svc = proxyingMiddleware(context.Background(), *proxy, logger)(svc)
-	svc = loggingMiddleware(logger)(svc)
-	svc = instrumentingMiddleware(requestCount, requestLatency, countResult)(svc)
+	// svc = loggingMiddleware{logger, svc}
+	// svc = instrumentingMiddleware{requestCount, requestLatency, countResult, svc}
 
-	uppercaseHandler := httptransport.NewServer(
-		makeUppercaseEndpoint(svc),
-		decodeUppercaseRequest,
+	CreateBookHandler := httptransport.NewServer(
+		makeCreateBookEndpoint(svc),
+		decodeCreateBookRequest,
 		encodeResponse,
 	)
-	countHandler := httptransport.NewServer(
-		makeCountEndpoint(svc),
-		decodeCountRequest,
+	GetByBookIdHandler := httptransport.NewServer(
+		makeGetBookByIdEndpoint(svc),
+		decodeGetBookByIdRequest,
 		encodeResponse,
 	)
+	DeleteBookHandler := httptransport.NewServer(
+		makeDeleteBookEndpoint(svc),
+		decodeDeleteBookRequest,
+		encodeResponse,
+	)
+	UpdateBookHandler := httptransport.NewServer(
+		makeUpdateBookendpoint(svc),
+		decodeUpdateBookRequest,
+		encodeResponse,
+	)
+	http.Handle("/", r)
+	http.Handle("/book", CreateBookHandler)
+	http.Handle("/book/update", UpdateBookHandler)
+	r.Handle("/book/{customerid}", GetByBookIdHandler).Methods("GET")
+	r.Handle("/book/{customerid}", DeleteBookHandler).Methods("DELETE")
 
-	http.Handle("/uppercase", uppercaseHandler)
-	http.Handle("/count", countHandler)
-	http.Handle("/metrics", promhttp.Handler())
-	logger.Log("msg", "HTTP", "addr", *listen)
-	logger.Log("err", http.ListenAndServe(*listen, nil))
+	// http.Handle("/metrics", promhttp.Handler())
+	logger.Log("msg", "HTTP", "addr", ":"+os.Getenv("PORT"))
+	logger.Log("err", http.ListenAndServe(":"+os.Getenv("PORT"), nil))
 }
