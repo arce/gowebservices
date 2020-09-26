@@ -42,8 +42,8 @@ func main() {
 	http.Handle("/", r)
 	http.Handle("/book", CreateBookHandler)
 	http.Handle("/book/update", UpdateBookHandler)
-	r.Handle("/book/{customerid}", GetByBookIdHandler).Methods("GET")
-	r.Handle("/book/{customerid}", DeleteBookHandler).Methods("DELETE")
+	r.Handle("/book/{bookid}", GetByBookIdHandler).Methods("GET")
+	r.Handle("/book/{bookid}", DeleteBookHandler).Methods("DELETE")
 
 	// http.Handle("/metrics", promhttp.Handler())
 	logger.Log("msg", "HTTP", "addr", ":"+os.Getenv("PORT"))

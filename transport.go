@@ -9,8 +9,6 @@ import (
 	"net/http"
 )
 
-// Endpoint for the Book service.
-
 func makeCreateBookEndpoint(s BookService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(CreateBookRequest)
@@ -57,8 +55,8 @@ func decodeCreateBookRequest(_ context.Context, r *http.Request) (interface{}, e
 
 func decodeGetBookByIdRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req GetBookByIdRequest
-	fmt.Println("-------->>>>into GetById Decoding")
 	vars := mux.Vars(r)
+	fmt.Println("-------->>>>into GetById Decoding" + vars["bookid"])
 	req = GetBookByIdRequest{
 		Id: vars["bookid"],
 	}
