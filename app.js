@@ -1,7 +1,7 @@
 function test() {
 
 service = fetchival
-var posts = service('https://webservicegoapi.herokuapp.com/books/Book1')
+var posts = service('https://webservicegoapi.herokuapp.com/books/Book1/')
 
 //posts
 posts.get()
