@@ -1,3 +1,4 @@
+<?php header("Access-Control-Allow-Origin: *"); ?>
 <html>
 <head>
   <script type="text/javascript" src="js/fetchival.min.js"></script>
